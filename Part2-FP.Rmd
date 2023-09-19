@@ -1,0 +1,64 @@
+---
+title: "Movie-Recommendation"
+author: "Vy Lam"
+date: "2023-09-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(readxl)
+library(broom)
+library(ggplot2)
+library(tidymodels) 
+library(stringr)
+tidymodels_prefer()
+```
+
+```{r}
+imdbData <- read.csv("/Users/vy/Desktop/1-School/Fall 23/Projects in DS/imdb_top_1000.csv")
+```
+
+```{r}
+genre <- imdbData %>% 
+  count(Genre)
+
+genre %>% 
+  arrange(desc(n)) %>% 
+  slice(1:10) %>% 
+  mutate(Genre = fct_reorder(Genre, n, .desc = FALSE)) %>%
+  ggplot(aes(x =n , y = Genre)) + 
+  geom_col(fill = "lightpink", color = "black") +
+  labs(title = "Top 10 Genres with the Most Movies Made ",
+       caption = "Data Retrieved from Kaggle",
+       x = element_blank(), y = element_blank())
+
+```
+
+Copy the research questions from part three during the in class exercise to your file.
+Load at least two datasets. Coordinate your work with your teammates to make sure you work on separate datasets. If there are datasets you tried to load that didn't work or seem interesting, name the dataset and describe the experience. Ask your teammate if they have ideas to get it working.
+For each dataset
+1. Data source (who created it?)
+  HARSHIT SHANKHDHAR
+  - IMDB (Public Domain) - Web scraped from IMDB.
+  
+2. Data description - who's in it and what’s being measured?
+  Movie directors, critic scores, actors, meta score (more reviews - like rotten tomatoes),  title, runtime, release year, rating, certificate (movie age rating).
+  Overall, the data showcases revenue of the movies. Votes are shown -- but does not indicate out of how much engagement (not that this matters as much as long as they get the engagement -- via votes).
+  
+3. Data limitations (eg, are the data recent? do they contain all variables you might want?)
+
+  There are only 1000 data points. It does not seem like they are picked based on a specific category. The data is relatively new but it is very limited. So, if I were to look at sponsorship for the movies -- it will be difficult to just use this dataset as it's not depicted nor collected. Something else I would like to look at is the screening availability. For example, where/how many countries the movie was able to screen in. They're expecting to update the data quarterly.
+  
+4. Show the variable names. Describe the most useful / interesting ones.
+I think genres, overview (how many characters), and revenue would be interest to see what people are watching and what draws them to it, as well as, were they will to spend their money for it.
+
+5. Visualize one interesting variable.
+
+Indicate some variable or variables that can connect at least two of the datasets in a join. You do not need to actually do the join, just figure out which variables would be helpful.
