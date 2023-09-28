@@ -1,0 +1,152 @@
+---
+title: "Movie in the Making"
+author: "Vy Lam"
+date: "2023-09-26"
+output: html_document
+theme: "journal"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(readxl)
+library(broom)
+library(ggplot2)
+library(tidymodels) 
+library(stringr)
+library(gridExtra)
+tidymodels_prefer()
+```
+
+```{r}
+rotten_tomatoes_movies <- read.csv("/Users/vy/Desktop/1-School/Fall 23/Projects in DS/FP2/rotten_tomatoes_movies.csv")
+rotten_tomatoes_reviews <- read.csv("/Users/vy/Desktop/1-School/Fall 23/Projects in DS/FP2/rotten_tomatoes_movie_reviews.csv")
+```
+
+```{r}
+# movie_reviews <- 
+#     rotten_tomatoes_movies %>% 
+#     left_join(rotten_tomatoes_reviews, by = "id")
+# movie_reviews <- drop_na(movie_reviews)
+
+```
+
+```{r}
+movies_noNull <- 
+    drop_na(rotten_tomatoes_movies) %>% 
+    select(runtimeMinutes,tomatoMeter, genre,audienceScore)
+
+movies_noNull$runtime_cat <- ifelse(movies_noNull$runtimeMinutes <= 90, "<= 90 Min", "> 90 Min")
+
+```
+
+### Films Shorter than 90 Minutes
+```{r,fig.alt= "Visualization for films shorter than 90 minutes highlights documentaries as the more popular choice in production with a total of 1358 films."}
+movie_l90 <- movies_noNull %>% 
+  filter(runtime_cat == "<= 90 Min")
+
+genre_movies <- movie_l90 %>%
+  count(genre)
+
+genre_movies_ordered1 <-genre_movies %>% 
+  arrange(desc(n)) %>% 
+  slice(1:10)
+
+plot1 <- genre_movies_ordered1 %>% 
+  mutate(genre = fct_reorder(genre, n, .desc = FALSE)) %>%
+  ggplot(aes(x =n , y = genre)) + 
+  geom_col(fill = "#FFC107", color = "#004D40") +
+  labs(title = "Top 10 Genres for Films <= 90 Minutes",
+       caption = "Data Retrieved from Kaggle",
+       x = element_blank(), y = element_blank())+
+        geom_text(aes(label = n), 
+              hjust = .001, size = 3)+
+  coord_cartesian(xlim = c(100, 5000)) +
+  theme(plot.title = element_text(size = 8),
+        plot.caption = element_text(size = 5),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "white"))
+plot1
+```
+
+### Films Longer than 90 Minutes
+```{r,fig.alt= "Visualization for films longer than 90 minutes highlights drama as the top producing genre at a count of 4514."}
+movie_m90 <- movies_noNull %>% 
+  filter(runtime_cat == "> 90 Min")
+
+genre_movies <- movie_m90 %>%
+  count(genre)
+
+genre_movies_ordered2 <-genre_movies %>% 
+  arrange(desc(n)) %>% 
+  slice(1:10)
+
+plot2 <- genre_movies_ordered2 %>% 
+  mutate(genre = fct_reorder(genre, n, .desc = FALSE)) %>%
+  ggplot(aes(x =n , y = genre)) + 
+  geom_col(fill = "#FFC107", color = "#004D40") +
+  labs(title = "Top 10 Genres for Films > 90 Minutes",
+       caption = "Data Retrieved from Kaggle",
+       x = element_blank(), y = element_blank())+
+        geom_text(aes(label = n), 
+              hjust = .001, size = 3) +
+  coord_cartesian(xlim = c(100, 5000))+
+  theme(plot.title = element_text(size = 8),
+        plot.caption = element_text(size = 5),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "white"))
+
+plot2
+```
+
+```{r, fig.alt= "Visualization for films shorter than 90 minutes highlights documentaries as the more popular choice in filmmaking or production. However, more films are produced under the genre, drama for films longer than 90 minutes."}
+## combining
+combined_plot <- grid.arrange(plot1, plot2, ncol = 2)
+```
+
+## Analysis
+
+How much can a film's genre dictate its prospect? 
+Can we quantify categories? Yes. Why does it matter? 
+
+Why genre? Well, we're looking for engagement or interest in a particular film project not only from viewers
+but also the creators themselves. How can creators keep their audience engaged after paying a certain of money?
+I mean, before they invest their money -- they need to invest some sort of emotional interest. Beyond just hype,
+people *actually* go to watch a movie because they would like to. 
+
+Haven't you ever wondered why someone chooses to just make a film? Why should a film be more than 90 minutes long?
+The human attention span isn't even that much (in some cases). What are some of the factors that filmmakers 
+make in consideration of the stakeholders?
+
+Evidently, more documentaries tend to be produced if they are shorter than 90 minutes. Why? Well, one of the reasons
+may be educational-purpose at certain institutions. Filmmakers might be more obligated to create content 
+that can fit into a course's time limit or long enough to keep students engaged. As for movies longer than 90 minutes,
+dramas and comedies tend to be more of a match for the makers. This suggest that they try to create something that is
+actually interesting. Now, worth noting that among the top ten genres produced or visible in the visualizations --
+they're mainly single or coupled tags. Therefore, these are more of films categorized under tags in a purist form.
+
+Choice of visualization -- Initially, I just looked at films and their genres that falls under 90 minutes or shorter. However, I wanted
+to get the wider perspective on what side-by-side comparison would look like for films that are longer than 90 minutes.
+The purpose is to see whether or not genre impact film duration. And trying to make a case that certain films may or may not 
+be desired depending on their second name (first name goes to their title). Second name meaning the tags, the genres.
+People appreciate tags as it can tell them a lot of information in a short amount of time before deciding to read the sypnosis.
+Aside from that, the choice of colors and highlighting the bars are meant to be color-blindness friendly. The bars are sorted
+in a descending manner so that the pattern can be recognized.
+
+There were over 140,000 data entries. After some data cleaning, and wrangling -- this is the amount that are relevant for the 
+top ten films and are either longer or shorter than 90 minutes.
+
+
+## How to expand from this?
+
+We can try to look for datasets that include revenue and budget where it can map to the unique ids of the films and try to explore whether or not certain genres cost more to produce. And whether or not the return on investment (ROI) is worth it. In addition, it would be worthwhile 
+to look for existing data on sponsorships (in dollar revenue or number of sponsors). In addition, we can look into production companies
+to see which are more successful in certain categories. Who have been able to create a name for themselves? 
+
+Worth noting, we can also look at time periods -- which quarter of the year encourages a certain genre to be produced more than the others?
+There are plethora ways to analyze movie engagement and methodologies in doing such. 
