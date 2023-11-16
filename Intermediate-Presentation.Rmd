@@ -170,7 +170,7 @@ in the revenue of films. The top five categories are budget, year, score, compan
 
 Why? 
 - Random Forest is a tree-based model and does not require feature scaling. The algorithm requires 
-partitioning, even if you apply Normalization then also yield the result would be the same. Random forest
+partitioning, even if you apply Normalization then also the yielding result would be the same. Random forest
 yields better results than linear regression. However, we must not forego one methodology 
 without some fact-checking. Below are single predictors graph which can help people understand 
 how some variables hold more power than others.
