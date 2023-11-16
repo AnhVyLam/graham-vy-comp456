@@ -1,0 +1,240 @@
+---
+title: "Intermediate Presentation"
+author: "Vy Lam, Graham Elliot"
+date: "2023-11-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(vip)
+library(tidymodels)
+library(randomForest)
+library(yardstick)
+library(caret)
+tidymodels_prefer()
+conflicted::conflict_prefer("vi", "vip")
+
+# Read in the data
+movies <- read_csv("/Users/vy/Desktop/1-School/Fall 23/Projects in DS/movies.csv")
+
+movies<-movies %>% 
+  drop_na()
+```
+
+
+## Topic Description
+We're currently working on exploring the realm of films and their production value.
+Our goals are to figure out whether or not there is a set formula for a film's success. 
+We've chosen a dataset from Kaggle. The dataset draws in around 200 plus movies each year
+for the past four decades. 
+
+Data Source: https://www.kaggle.com/datasets/danielgrijalvas/movies 
+
+Our research question(s): 
+
+1. Can we predict success of a film based on factors such as budget, runtime, and year?
+2. How can we isolate individual variables best contribute to high revenue and positive ratings of a film?
+
+While our expert is highly skeptical of data and the idea of it affecting a movie's performance, 
+we also wanted to bring attention to how perhaps maybe quantifiable items aren't the only
+influencers of a film's success.
+
+### Data Wrangling
+```{r}
+movies <- movies %>%
+  mutate(gross = factor(gross)) %>% #make sure outcome is factor
+  mutate(across(where(is.character), as.factor))
+
+movies <- movies %>% 
+  subset(!grepl("e", gross))
+
+movies$gross <- as.numeric(movies$gross)
+```
+
+### Randomizing 
+```{r}
+set.seed(456)
+```
+
+### Explanation
+
+The following steps of random forest are all to pre-process the data & creating
+workflows for the tree-making process.
+```{r}
+# Model Specification
+rf_spec <- rand_forest() %>%
+  set_engine(engine = 'ranger') %>% 
+  set_args(mtry = NULL, # size of random subset of variables
+           trees = 1000, # Number of trees
+           min_n = 2,
+           importance = 'impurity') %>% 
+  set_mode('regression') # change this for regression
+
+# Recipe
+data_rec <- recipe(gross ~., data = movies)
+
+# Workflows
+data_wf_mtry2 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 2)) %>%
+  add_recipe(data_rec)
+
+data_wf_mtry4 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 4)) %>%
+  add_recipe(data_rec)
+
+data_wf_mtry7 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 7)) %>%
+  add_recipe(data_rec)
+
+data_wf_mtry13 <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = 13)) %>%
+  add_recipe(data_rec)
+```
+
+```{r}
+set.seed(456) # make sure to run this before each fit so that you have the same 1000 trees
+data_fit_mtry2 <- fit(data_wf_mtry2, data = movies)
+
+set.seed(456)
+data_fit_mtry4 <- fit(data_wf_mtry4, data = movies)
+
+set.seed(456) 
+data_fit_mtry7 <- fit(data_wf_mtry7, data = movies)
+
+set.seed(456)
+data_fit_mtry13 <- fit(data_wf_mtry13, data = movies)
+```
+
+```{r}
+rf_OOB_output <- function(fit_model, model_label, truth){
+    tibble(
+          .pred_class = fit_model %>% extract_fit_engine() %>% pluck('predictions'), #OOB predictions
+          class = truth,
+          model = model_label
+      )
+}
+rf_OOB_output(data_fit_mtry2,'mtry2', movies %>% pull(gross))
+```
+
+```{r}
+data_rf_OOB_output <- bind_rows(
+    rf_OOB_output(data_fit_mtry2,'mtry2', movies %>% pull(gross)),
+    rf_OOB_output(data_fit_mtry4,'mtry4', movies %>% pull(gross)),
+    rf_OOB_output(data_fit_mtry7,'mtry7', movies %>% pull(gross)),
+    rf_OOB_output(data_fit_mtry13,'mtry13', movies %>% pull(gross))
+)
+```
+
+```{r}
+data_fit_mtry2
+data_fit_mtry4
+data_fit_mtry7
+data_fit_mtry13
+```
+
+```{r}
+data_rf_OOB_output %>%
+  group_by(model) %>%
+  yardstick::rmse(.pred_class, class)
+```
+
+```{r}
+ggplot(data_rf_OOB_output, aes(x = model, y = .pred_class - class)) +
+  geom_boxplot() +
+  labs(title = "Model RMSE Comparison", x = "mtry", y = "RMSE")
+```
+A model comparison for RMSE to see the average difference between values predicted by a model
+and the actual values. This helps in figuring out which model will be the more accurate one to
+view variable importance.
+
+```{r}
+model_output <-data_fit_mtry4 %>% 
+    extract_fit_engine() 
+
+model_output %>% 
+    vip(num_features = 10) + theme_classic() #based on impurity
+
+model_output %>% vip::vi() %>% head()
+model_output %>% vip::vi() %>% tail()
+```
+
+The column graph above highlights the top variables in which have the most impact 
+in the revenue of films. The top five categories are budget, year, score, company, and runtime. 
+
+Why? 
+- Random Forest is a tree-based model and does not require feature scaling. The algorithm requires 
+partitioning, even if you apply Normalization then also yield the result would be the same. Random forest
+yields better results than linear regression. However, we must not forego one methodology 
+without some fact-checking. Below are single predictors graph which can help people understand 
+how some variables hold more power than others.
+
+We've explored some single predictors versus our response variable, gross (revenue).
+And they pretty much sum up some of the results from the random forest model.
+
+### Single Predictor Graphs
+
+```{r}
+ggplot(movies, aes(x = runtime, y = gross)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(title = "Scatter Plot with Line of Best Fit (Runtime)",
+       x = "Runtime",
+       y = "Gross")
+
+ggplot(movies, aes(x = budget, y = gross)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Scatter Plot with Line of Best Fit (Budget)",
+       x = "Budget",
+       y = "Gross")
+
+```
+Runtime vs Gross Graph:
+ - Many movies tend to perform better in terms of revenue when the duration of the movie 
+ runs between 80-150 minutes. This says something more about the culture around us than the dataset itself
+ 
+Budget vs Gross Graph:
+- Overall, most movies' performance based on budget plateaus once the budget reaches 100 million 
+threshold. 
+- Typically, a movie's budget shouldn't be this much.
+
+#### Tableau Viz: 
+https://public.tableau.com/app/profile/vy.lam/viz/ImaginingGlobalMovies/Sheet1?publish=yes 
+
+Here, we are looking at other single variable predictors, country and year . 
+Country is about the movie's country of origin. The goal is to see, aside from the variables
+given by the random forest model, can we see success based on country and year of film's release?
+Well, we tried to visualize the data using an interactive world map to see our data 
+better as a scatterplot would not be suffice. We've decided highlight two years
+and see how well they perform across all the countries that released a movie, and the data is in the dataset.
+They are 2010 and 2020. In 2010, the country with the highest average revenue is the United States.
+The goal is to get a decade analysis of maybe which country have higher averages
+in revenue for a movie release. To our surprise, it's not the United States that had the highest
+average in revenue for 2020. Through this exploration, we found that there might be some limitations 
+within our datdasets and we might have to expand and join more data later on.
+## Next Steps
+
+Work plan: https://docs.google.com/document/d/1Yb6owP6v_fIm-QJlBFH_MZ9QL9_FiyhtHPV-e-SIZ0s/edit
+
+## Contribution Summary
+
+Graham contributed to:
+ - Single predictor graphs in R & part of the analysis for them
+ - Shiny App in R
+ - Discussion of work plan & next steps
+ - Reaching out to Leslie Mynt
+ - Worked on putting the presentation together
+ 
+Vy contributed to:
+ - Running Random Forest Method & analysis, R analysis of a few graphs made in R
+ - Creating interactive world map in Tableau 
+ - Fleshing out work plan & discussing next steps
+ - Worked on putting together the presentation
+ - Revising graphs & compiling RMD for final submission
