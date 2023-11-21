@@ -1,0 +1,293 @@
+# Building an Interactive Shiny App
+
+In this comprehensive tutorial, we will delve into Shiny and create an interactive Shiny app that includes dropdown menus, slider filters, and dynamic plots. By the end of this activity, you will have a solid understanding of Shiny and a Shiny app you have created, hopefully something that is related to or can help with your project. 
+
+We encourage you to work together with people at your table or group.
+
+
+## Shiny App Basics
+
+Shiny is a package in R that allows us to build and develop applications to be deployed on the internet using R. The Shiny package, which we will install in a moment, has a handful of example apps we will explore to get familiar with the format and code. 
+
+Shiny apps are created within a single file called app.R, and this file contains 3 parts that ensure the Shiny app runs as planned (user interface object (ui), server function, shinyApp function)
+
+
+The user interface (ui) object controls the layout and appearance of your app. The server function contains the instructions that your computer needs to build your app. Finally, the shinyApp function creates Shiny app objects from an explicit UI/server pair.
+
+## Cheat Sheet, similar to the ggplot cheatsheet
+
+https://rstudio.github.io/cheatsheets/shiny.pdf
+
+
+### Sample Shiny Apps within the shiny package
+
+### Warm-Up (Explore & discuss):
+
+To view a sample shiny app from the shiny package, type "runExample("01_hello")" into your console. It will display a sample app with the corresponding code to explore for a few moments. You can display more examples using any of the following after "runExample" - ("01_hello", "02_text", "03_reactivity", "04_mpg", "05_sliders", "06_tabsets", "07_widgets", "08_html", "09_upload", "10_download", "11_timer")
+
+What do you see? What code looks familiar & what code looks new to you? Talk to people at your table.
+
+### Shiny App Basics
+
+Before we dive into creating our Shiny app, let's explore some key functions that will allow you to customize and enhance your app. Just browse these quickly and feel free to return to them for syntax later on when you work to create your own app!
+
+### Getting started: 
+Install the 'shiny' package if not already installed using **install.packages("shiny").**
+You might also need ggplot2 & dplyr as well.
+
+```{r}
+# TODO: Install Package(s)
+```
+
+
+Load the 'shiny' package at the beginning of your script using library(shiny).
+
+```{r}
+# TODO: Load shiny Library & any others you would need later
+
+```
+
+#### 1. Customizing the Appearance with fluidPage Options
+
+In Shiny, the fluidPage function is used to create the overall structure of the app. You can customize the appearance by adding additional arguments to fluidPage. For example, you can use the theme argument to apply a Bootstrap theme to your app:
+
+```{r}
+# Customize the appearance of the app
+ui <- fluidPage(
+  titlePanel("My Shiny App"),
+  theme = "yeti",  # Choose from "default", "cerulean", "cosmo", "flatly", "journal", "lumen", "paper", "readable", "sandstone", "simplex", "spacelab", "united", or "yeti"
+  sidebarLayout(
+    sidebarPanel(
+      textInput("user_input", "Enter a message:"),
+      sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+    ),
+    mainPanel(
+      textOutput("output_text"),
+      plotOutput("output_plot")
+    )
+  )
+)
+```
+
+#### 2. Adding Tabs with tabsetPanel
+If you want to organize your app into tabs, you can use the tabsetPanel function. This allows users to switch between different sections of your app easily:
+
+```{r}
+# Organize the app into tabs
+ui <- fluidPage(
+  titlePanel("My Shiny App"),
+  sidebarLayout(
+    sidebarPanel(
+      textInput("user_input", "Enter a message:"),
+      sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+    ),
+    mainPanel(
+      tabsetPanel(
+        tabPanel("Tab 1", textOutput("output_text")),
+        tabPanel("Tab 2", plotOutput("output_plot"))
+      )
+    )
+  )
+)
+```
+
+
+#### 3. Enhancing Layout with navbarPage
+For more complex apps, you might want to use a navigation bar. The navbarPage function allows you to create a navigation bar with different pages:
+```{r}
+# Use a navigation bar for a multi-page app
+ui <- navbarPage(
+  title = "My Shiny App",
+  tabPanel("Tab 1",
+           sidebarLayout(
+             sidebarPanel(
+               textInput("user_input", "Enter a message:"),
+               sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+             ),
+             mainPanel(
+               textOutput("output_text")
+             )
+           )),
+  tabPanel("Tab 2",
+           sidebarLayout(
+             sidebarPanel(
+               textInput("user_input", "Enter a message:"),
+               sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+             ),
+             mainPanel(
+               plotOutput("output_plot")
+             )
+           ))
+)
+```
+
+------------------------------------------------------------------------------------------------------
+## Try it yourself! Follow TODOs if you're unsure on what to do. Try it yourself before looking for hints!
+### Step 1: Creating the Basic UI (User Interface) - already done, you just need to add a title
+### Step 2: Adding Input Components
+### Step 3: Adding Output Components
+
+Create a basic Shiny app structure with a title panel, a sidebar layout, and a main panel.
+We've set up the basic app structure of the UI aspect. Follow the instructions & complete the TODOs. 
+Do not rush in trying to run the code immediately, it will all come together once the basic UIs have been set up.
+
+If you have any questions on how to use a function, type ??functionname into the console to get more details.
+  A. Use the console to navigate how to see function usage.
+  B. For steps 2 & 3, place textInput either/or textOutput where they respectively belong.
+
+```{r}
+# Define UI
+ui <- fluidPage(
+  titlePanel("Your Title Here"), # TODO: Add a title
+  sidebarLayout(
+    sidebarPanel( 
+      # Step 2(TODO): Edit input components here <- note where the input are located in sidebarPanel
+
+    ),
+    mainPanel(
+      # Step 3(TODO): Edit output components here
+
+    )
+  )
+)
+# Run statement below to test the current status
+shinyApp(ui,server) 
+```
+
+
+### Step 2 (HINT): Adding Input Components
+
+```{r}
+# Sample: 
+textInput("user_input", "Enter a message:")
+```
+
+Save your script. You won't see any interaction yet, but it's the first step in building an interactive Shiny app.
+
+### Step 3 (HINT): Adding Output Components
+
+Inside the mainPanel section of the UI, add a text output component:
+
+```{r}
+# Sample:
+textOutput("output_text")
+```
+
+
+### Step 4: Define server 
+
+The server function accesses inputs selected by the user to perform computations and specifies how outputs laid out in the UI should be updated.
+The server definition has been given. 
+
+In the server function, use renderText to display the user input as output:
+
+```{r}
+# Define server
+server <- function(input, output) {
+  output$output_text <- renderText({
+    input$user_input
+  })
+  
+  output$output_text <- renderText({
+    input$user_input
+  })
+}
+```
+
+Save your script and run it. Now you should see the text input and text output components. When you type in the text input, the text output should update accordingly.
+
+```{r}
+# Run code below to render progress
+shinyApp(ui,server) 
+```
+
+### Step 5: Adding More Interactive Components
+The following interactive components must be nested in a function! 
+Try & see where they belong. Running them singularly will not yield the results you would expect.
+
+In the sidebarPanel, add a slider input component: 
+
+```{r}
+sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+```
+
+In the mainPanel, add a plot output component:
+
+```{r}
+plotOutput("output_plot")
+```
+
+In the server function, use renderPlot to update the plot based on the slider input:
+
+```{r}
+output$output_plot <- renderPlot({
+  x <- seq(1, input$slider_value)
+  plot(x, x^2, type = "b", main = "Dynamic Plot")
+})
+```
+
+
+```{r}
+# Place complete code in this code chunk| Run the code in a 
+
+```
+
+
+Save your script and run it. You should now have text input, text output, a slider input, and a dynamic plot. Interact with these components to see how they respond to user input.
+
+------------------------------------------------------------------------------
+### Step 7: Combining the Skills
+This is what your code should relatively look like! Try running it & see the end results!
+
+```{r}
+# Full Shiny App Code
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Enhanced Shiny App"),
+  sidebarLayout(
+    sidebarPanel(
+      textInput("user_input", "Enter a message:"),
+      sliderInput("slider_value", "Select a value:", min = 1, max = 10, value = 5)
+    ),
+    mainPanel(
+      textOutput("output_text"),
+      plotOutput("output_plot")
+    )
+  )
+)
+
+# Define server
+server <- function(input, output) {
+  output$output_text <- renderText({
+    input$user_input
+  })
+
+  output$output_plot <- renderPlot({
+    x <- seq(1, input$slider_value)
+    plot(x, x^2, type = "b", main = "Dynamic Plot")
+  })
+}
+
+# Run the Shiny app
+shinyApp(ui, server)
+
+```
+
+Save your script and run the app by clicking the "Run App" button in RStudio (or use shinyApp(ui,server) to run the app)
+
+
+## Your Turn: Create Your Own Shiny App
+
+Using the example above and the concepts you've learned, it's your turn to create your own Shiny app. Use the following suggestions as a starting point:
+
+1. Choose a dataset you are using for your project.
+2. Add more interactive input elements (e.g., sliders, dropdown menus, user text input).
+3. Customize the plot appearance and add additional plot types.
+4. Incorporate meaningful labels and titles.
+
+Feel free to experiment and make it your own using prior knowledge or the cheat sheet from above with all the listed functions. 
+
+### Wrap-Up:
+
+What do you think that this tool would be good for? How is it different from simply plotting using ggplot?
